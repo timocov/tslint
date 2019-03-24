@@ -21,25 +21,21 @@ import * as Lint from "../index";
 
 import { codeExamples } from "./code-examples/unnecessaryElse.examples";
 
-const OPTION_ALLOW_ELSE_IF = "allow-else-if";
-
 export class Rule extends Lint.Rules.AbstractRule {
     /* tslint:disable:object-literal-sort-keys */
     public static metadata: Lint.IRuleMetadata = {
         description: Lint.Utils.dedent`
         Disallows \`else\` blocks following \`if\` blocks ending with a \`break\`, \`continue\`, \`return\`, or \`throw\` statement.`,
         descriptionDetails: "",
-        optionExamples: [true, [true, OPTION_ALLOW_ELSE_IF]],
+        optionExamples: [true, [true, { allowElseIf: true }]],
         options: {
-            type: "array",
-            items: {
-                type: "string",
-                enum: [OPTION_ALLOW_ELSE_IF],
+            type: "object",
+            properties: {
+                allowElseIf: { type: "boolean" },
             },
-            uniqueItems: true,
         },
         optionsDescription: Lint.Utils.dedent`
-            You can optionally specify the option \`"${OPTION_ALLOW_ELSE_IF}"\` to allow "else if" statements.
+            You can optionally specify the option \`"allowElseIf"\` to allow "else if" statements.
         `,
         rationale: Lint.Utils.dedent`
         When an \`if\` block is guaranteed to exit control flow when entered,
@@ -57,14 +53,23 @@ export class Rule extends Lint.Rules.AbstractRule {
     }
 
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk, {
-            allowElseIf: this.ruleArguments.indexOf(OPTION_ALLOW_ELSE_IF) !== -1,
-        });
+        return this.applyWithFunction(
+            sourceFile,
+            walk,
+            parseOptions(this.ruleArguments[0] as Partial<Options> | undefined),
+        );
     }
 }
 
 interface Options {
     allowElseIf: boolean;
+}
+
+function parseOptions(option: Partial<Options> | undefined): Options {
+    return {
+        allowElseIf: false,
+        ...option,
+    };
 }
 
 function walk(ctx: Lint.WalkContext<Options>): void {
