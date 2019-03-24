@@ -79,11 +79,13 @@ function walk(ctx: Lint.WalkContext<Options>): void {
                 ? getJumpStatement(getLastStatement(node.thenStatement))
                 : getJumpStatement(node.thenStatement);
 
-            if (jumpStatement !== undefined && node.elseStatement !== undefined) {
-                if (!utils.isIfStatement(node.elseStatement) || !ctx.options.allowElseIf) {
-                    const elseKeyword = getPositionOfElseKeyword(node, ts.SyntaxKind.ElseKeyword);
-                    ctx.addFailureAtNode(elseKeyword, Rule.FAILURE_STRING(jumpStatement));
-                }
+            if (
+                jumpStatement !== undefined &&
+                node.elseStatement !== undefined &&
+                (!utils.isIfStatement(node.elseStatement) || !ctx.options.allowElseIf)
+            ) {
+                const elseKeyword = getPositionOfElseKeyword(node, ts.SyntaxKind.ElseKeyword);
+                ctx.addFailureAtNode(elseKeyword, Rule.FAILURE_STRING(jumpStatement));
             }
         }
         return ts.forEachChild(node, cb);
